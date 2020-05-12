@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <upsQuoteSetting>
+            <third>
+                <UPSDomesticServices>03,02,59,13,01,14,12</UPSDomesticServices>
+                <UPSInternationalServices>11,08,65,07,54</UPSInternationalServices>
+                <upsRates>publish</upsRates>
+                <transitDaysRestrictionBy>TransitTimeInDays</transitDaysRestrictionBy>
+            </third>
+        </upsQuoteSetting>
+        <carriers>
+            <ENUPSSmpkg>
+                <active>1</active>
+                <sallowspecific>0</sallowspecific>
+                <price>0</price>
+                <model>Eniture\UPSSmallPackageQuotes\Model\Carrier\UPSSmpkgShipping</model>
+                <allowed_methods>GROUND_HOME_DELIVERY,FEDEX_GROUND,FEDEX_EXPRESS_SAVER,FEDEX_2_DAY,FEDEX_2_DAY_AM,STANDARD_OVERNIGHT,PRIORITY_OVERNIGHT,FIRST_OVERNIGHT,FEDEX_EXPRESS_SAVER,FEDEX_2_DAY,FEDEX_2_DAY_AM,STANDARD_OVERNIGHT,PRIORITY_OVERNIGHT,FIRST_OVERNIGHT,INTERNATIONAL_GROUND,INTERNATIONAL_ECONOMY,INTERNATIONAL_ECONOMY_DISTRIBUTION,INTERNATIONAL_ECONOMY_FREIGHT,INTERNATIONAL_FIRST,INTERNATIONAL_PRIORITY,INTERNATIONAL_PRIORITY_DISTRIBUTION,INTERNATIONAL_PRIORITY_FREIGHT,INTERNATIONAL_DISTRIBUTION_FREIGHT</allowed_methods>
+                <name>Fixed</name>
+                <title>UPS Small Package Quotes</title>
+                <specificerrmsg>This shipping method is not available. To use this shipping method, please contact us.</specificerrmsg>
+            </ENUPSSmpkg>
+        </carriers>
+    </default>
+</config>

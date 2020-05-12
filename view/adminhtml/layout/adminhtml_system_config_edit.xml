@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <link src="Eniture_UPSSmallPackageQuotes::js/upsSmpkgCommon.js"/>
+        <link src="Eniture_UPSSmallPackageQuotes::js/upsSmpkgTestconnection.js"/>
+        <link src="Eniture_UPSSmallPackageQuotes::js/upsSmpkgWarehouse.js"/>
+        <link src="Eniture_UPSSmallPackageQuotes::js/upsSmpkgDropship.js"/>
+        <link src="Eniture_UPSSmallPackageQuotes::js/upsRAD.js"/>
+        <link src="Eniture_UPSSmallPackageQuotes::js/tagsinput/upssm-bootstrap-tagsinput.js"/>
+    </head>
+</page>

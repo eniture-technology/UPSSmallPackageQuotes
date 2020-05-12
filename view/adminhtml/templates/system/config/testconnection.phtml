@@ -1,0 +1,16 @@
+<script >
+    require(['jquery', 'domReady!'], function ($) {
+        let carrierDiv = '#upsconnsettings_first-head';
+        upsSmNotesToggleHandling($, '<?= $block->escapeHtml($block->upsSmConnMsg(), ['a', 'div']); ?>', '.upsSm-conn-setting-note', carrierDiv);
+        upsSmCurrentPlanNote($, '<?php echo $block->escapeHtml($block->getPlanNotice(), ['a', 'div']); ?>', carrierDiv);
+    });
+</script>
+
+<div class="pp-buttons-container">
+    <button class="primary" id="<?php echo $block->escapeHtml($block->getId()) ?>"
+            upsSmconnAjaxUrl="<?php echo $block->escapeHtml($block->getAjaxCheckUrl()) ?>">
+        <span><span><span><?php echo $block->escapeHtml($block->getButtonLabel()); ?></span></span></span>
+    </button>
+</div>
+<!--API response will show here-->
+<div id="upsSm-response-box"></div>
