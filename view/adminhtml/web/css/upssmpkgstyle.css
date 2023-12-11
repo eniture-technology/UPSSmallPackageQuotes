@@ -195,11 +195,13 @@ label[for="origin_zip"]:after, label[for="origin_city"]:after, label[for="origin
     color: red;
 }
 
-label[for="upsconnsettings_first_username"]:after,
-label[for="upsconnsettings_first_password"]:after,
-label[for="upsconnsettings_first_upsLicenseKey"]:after,
-label[for="upsconnsettings_first_accountNumber"]:after,
-label[for="upsconnsettings_first_licnsKey"]:after {
+label[for="upsconnsettings_first_username"]:not(.mage-error):after,
+label[for="upsconnsettings_first_password"]:not(.mage-error):after,
+label[for="upsconnsettings_first_upsLicenseKey"]:not(.mage-error):after,
+label[for="upsconnsettings_first_accountNumber"]:not(.mage-error):after,
+label[for="upsconnsettings_first_clientId"]:not(.mage-error):after,
+label[for="upsconnsettings_first_clientSecret"]:not(.mage-error):after,
+label[for="upsconnsettings_first_licnsKey"]:not(.mage-error):after {
     content: '*';
     color: red;
     padding: 5px;

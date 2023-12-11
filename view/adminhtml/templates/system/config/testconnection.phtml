@@ -2,7 +2,7 @@
     require(['jquery', 'domReady!'], function ($) {
         let carrierDiv = '#upsconnsettings_first-head';
         upsSmNotesToggleHandling($, '<?= $block->escapeHtml($block->upsSmConnMsg(), ['a', 'div']); ?>', '.upsSm-conn-setting-note', carrierDiv);
-        upsSmCurrentPlanNote($, '<?php echo $block->escapeHtml($block->getPlanNotice(), ['a', 'div']); ?>', carrierDiv);
+        upsSmCurrentPlanNote($, '<?php echo $block->getPlanNotice(); ?>', carrierDiv);
     });
 </script>
 

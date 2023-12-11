@@ -51,7 +51,7 @@ class UpsSmallPkgOriginAddress extends Action
     public function execute()
     {
         foreach ($this->getRequest()->getParams() as $key => $post) {
-            $data[$key] = filter_var($post, FILTER_SANITIZE_STRING);
+            $data[$key] = $post;
         }
 
         $originZip = isset($data['origin_zip']) ? $data['origin_zip'] : '';

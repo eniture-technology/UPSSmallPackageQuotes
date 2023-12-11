@@ -41,17 +41,25 @@ class TestConnection extends Action
     public function execute()
     {
         foreach ($this->getRequest()->getPostValue() as $key => $data) {
-            $credentials[$key] = filter_var($data, FILTER_SANITIZE_STRING);
+            $credentials[$key] = $data;
         }
+
         $postData = [
             'platform'              => 'magento2',
             'ups_username'          => $credentials['userName'],
             'ups_password'          => $credentials['password'],
-            'ups_license_key'       => $credentials['upsLcnsKey'],
             'ups_account_number'    => $credentials['accountNumber'],
             'ups_domain_name'       => $this->request->getServer('SERVER_NAME'),
             'plugin_licence_key'    => $credentials['pluginLicenceKey'],
         ];
+
+        if(isset($credentials['apiEndpoint']) && $credentials['apiEndpoint'] == 'new'){
+            $postData['ApiVersion'] = '2.0';
+            $postData['clientId'] = $credentials['clientId'] ?? '';
+            $postData['clientSecret'] = $credentials['clientSecret'] ?? '';
+        }else{
+            $postData['ups_license_key'] = $credentials['upsLcnsKey'] ?? '';
+        }
 
         $response = $this->dataHelper->upsSmpkgSendCurlRequest(EnConstants::TEST_CONN_URL, $postData);
         $result = $this->upsSmpkgLtlTestConnResponse($response);
@@ -69,17 +77,20 @@ class TestConnection extends Action
     {
         $response1 = [];
         $successMsg = 'The test resulted in a successful connection.';
-        $erMsg = 'The credentials entered did not result in a successful test. Confirm your credentials and try again.';
+        $erMsg = 'Empty response from API';
 
-        if (isset($response->error) && $response->error == 1) {
+        if(empty($response)){
             $response1['Error'] =  $erMsg;
-        } elseif ((isset($response->error) && isset($response->success)) && $response->error == 1) {
-            $response1['Error'] =  $erMsg;
+        } elseif ((isset($response->severity) && $response->severity == 'ERROR') || (isset($response->error) && $response->error == 1)) {
+            $response1['Error'] =  $response->Message ?? $erMsg;
+        } elseif ((isset($response->severity) && $response->severity == 'SUCCESS') || (isset($response->success) && $response->success == 1)) {
+            $response1['Success'] =  $successMsg;
         } elseif (isset($response->error) && !is_int($response->error)) {
             $response1['Error'] =  $response->error;
         } else {
-            $response1['Success'] =  $successMsg;
+            $response1['Error'] =  'An empty or unknown response format, therefore we are unable to determine whether it was successful or an error';
         }
+
         return json_encode($response1);
     }
 }

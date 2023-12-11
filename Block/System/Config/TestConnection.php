@@ -79,11 +79,20 @@ class TestConnection extends Field
      */
     public function getPlanNotice()
     {
-        return $this->dataHelper->upsSmallSetPlanNotice();
+        $planRefreshUrl = $this->getPlanRefreshUrl();
+        return $this->dataHelper->upsSmallSetPlanNotice($planRefreshUrl);
     }
 
     public function upsSmConnMsg()
     {
         return '<div class="message message-notice notice upsSm-conn-setting-note"><div data-ui-id="messages-message-notice">Note! You must have a UPS account to use this application. If you do not have one, contact UPS at 800-463-3339 or <a target="_blank" href="https://www.ups.com/doapp/signup">register online</a>.</div></div>';
+    }
+
+    /**
+     * @return url
+     */
+    public function getPlanRefreshUrl()
+    {
+        return $this->getbaseUrl().'upssmallpackagequotes/Test/PlanRefresh/';
     }
 }

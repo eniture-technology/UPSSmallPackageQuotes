@@ -84,10 +84,11 @@ class UPSSmpkgGenerateRequestData
             'serverName'    => $this->request->getServer('SERVER_NAME'),
             'carrierMode'   => 'pro',
             'quotestType'   => 'small',
-            'version'       => '1.0.0',
+            'version'       => '1.1.0',
             'api'           => $this->getApiInfoArr($request->getDestCountryId(), $origin),
             'getDistance'   => $getDistance,
         ];
+        
         return  $upsSmpkgArr;
     }
 
@@ -175,7 +176,9 @@ class UPSSmpkgGenerateRequestData
 
     public function setValuesInRequest()
     {
-        $domesticServices               = explode(',', $this->getConfigData('UPSDomesticServices'));
+
+        $domesticServList               = $this->getConfigData('UPSDomesticServices');
+        $domesticServices               = empty($domesticServList) ? [] : explode(',', $domesticServList);
         $oneRateChecked                 = $this->getOneRateServices();
         $internationalServicesLength    = $this->getServiceOptionsLength('UPSInternationalServices');
         $oneRateServicesLength          = $this->getServiceOptionsLength('UPSOneRateServices');
@@ -215,7 +218,12 @@ class UPSSmpkgGenerateRequestData
      */
     public function getServiceOptionsLength($services)
     {
-        return strlen($this->getConfigData($services));
+        $servConfData = $this->getConfigData($services);
+        if(empty($servConfData)){
+            return 0;
+        }else{
+            return strlen($servConfData);
+        }
     }
 
     /**
@@ -289,15 +297,26 @@ class UPSSmpkgGenerateRequestData
             ['hubId' => $this->getConfigData('hubId'), 'indicia' => 'PARCEL_SELECT'] : [];
 
         $apiArray = [
-            'ups_small_pkg_username'            => $this->getConfigData('username'),
-            'ups_small_pkg_password'            => $this->getConfigData('password'),
-            'ups_small_pkg_authentication_key'  => $this->getConfigData('upsLicenseKey'),
             'ups_small_pkg_account_number'      => $this->getConfigData('accountNumber'),
             'ups_small_pkg_resid_delivery'      => $residential,
             'services'                          => $this->getServices(),
             'prefferedCurrency'                 => $this->registry->registry('baseCurrency'),
             'includeDeclaredValue'              => $this->registry->registry('en_insurance'),
         ];
+
+        $apiEndpoint = $this->getConfigData('apiEndpoint');
+
+        if($apiEndpoint == 'new'){
+            $apiArray['ApiVersion'] = '2.0';
+            $apiArray['clientId'] = $this->getConfigData('clientId');
+            $apiArray['clientSecret'] = $this->getConfigData('clientSecret');
+            $apiArray['ups_small_pkg_username'] = $this->getConfigData('usernameNewAPI');
+            $apiArray['ups_small_pkg_password'] = $this->getConfigData('passwordNewAPI');
+        }else{
+            $apiArray['ups_small_pkg_username'] = $this->getConfigData('username');
+            $apiArray['ups_small_pkg_password'] = $this->getConfigData('password');
+            $apiArray['ups_small_pkg_authentication_key'] = $this->getConfigData('upsLicenseKey');
+        }
 
         return  $apiArray;
     }
@@ -371,9 +390,12 @@ class UPSSmpkgGenerateRequestData
     {
 
         $domesticServices = $internationalServices = $surePostServices = [];
-        $domesticServices       = explode(',', $this->getConfigData('UPSDomesticServices'));
-        $internationalServices  = explode(',', $this->getConfigData('UPSInternationalServices'));
-        $surePostServices       = explode(',', $this->getConfigData('UPSSurePost'));
+        $domesticServList       = $this->getConfigData('UPSDomesticServices');
+        $domesticServices       = empty($domesticServList) ? [] : explode(',', $domesticServList);
+        $internationalServList  = $this->getConfigData('UPSInternationalServices');
+        $internationalServices  = empty($internationalServList) ? [] : explode(',', $internationalServList);
+        $surePostServList       = $this->getConfigData('UPSSurePost');
+        $surePostServices       = empty($surePostServList) ? [] : explode(',', $surePostServList);
         return array_merge($domesticServices, $internationalServices, $surePostServices);
     }
     /**

@@ -261,7 +261,6 @@ class UPSSmpkgShipping extends AbstractCarrier implements CarrierInterface
         $url    = EnConstants::QUOTES_URL;
         $quotes = $this->dataHelper->upsSmpkgSendCurlRequest($url, $requestArr);
 
-
         // Debug point will print data if en_print_query=1
         if ($this->printQuery()) {
             $printData = ['url' => $url,
@@ -312,7 +311,8 @@ class UPSSmpkgShipping extends AbstractCarrier implements CarrierInterface
      */
     public function getAllowedMethods()
     {
-        $allowed = explode(',', $this->getConfigData('allowed_methods'));
+        $allowedList = $this->getConfigData('allowed_methods');
+        $allowed = empty($allowedList) ? [] : explode(',', $allowedList);
         $arr = [];
         foreach ($allowed as $k) {
             $arr[$k] = $this->getCode('method', $k);
@@ -425,11 +425,11 @@ class UPSSmpkgShipping extends AbstractCarrier implements CarrierInterface
 
                 $orderWidget[$originAddress['senderZip']]['origin'] = $originAddress;
 
-                $length = ($this->mageVersion < '2.2.5') ?
+                $length = ($_product->getData('en_length') != null) ?
                     $_product->getData('en_length') : $_product->getData('ts_dimensions_length');
-                $width = ($this->mageVersion < '2.2.5') ?
+                $width = ( $_product->getData('en_width') != null) ?
                     $_product->getData('en_width') : $_product->getData('ts_dimensions_width');
-                $height = ($this->mageVersion < '2.2.5') ?
+                $height = ( $_product->getData('en_height') != null) ?
                     $_product->getData('en_height') : $_product->getData('ts_dimensions_height');
 
                 $lineItems = [
@@ -441,10 +441,10 @@ class UPSSmpkgShipping extends AbstractCarrier implements CarrierInterface
                     'lineItemName' => $_product->getName(),
                     'piecesOfLineItem' => $productQty,
                     'lineItemPrice' => $_product->getPrice(),
-                    'lineItemWeight' => number_format($_product->getWeight(), 2, '.', ''),
-                    'lineItemLength' => number_format($length, 2, '.', ''),
-                    'lineItemWidth' => number_format($width, 2, '.', ''),
-                    'lineItemHeight' => number_format($height, 2, '.', ''),
+                    'lineItemWeight' => number_format((float)$_product->getWeight(), 2, '.', ''),
+                    'lineItemLength' => number_format((float)$length, 2, '.', ''),
+                    'lineItemWidth' => number_format((float)$width, 2, '.', ''),
+                    'lineItemHeight' => number_format((float)$height, 2, '.', ''),
                     'isHazmatLineItem' => $hazmat,
                     'product_insurance_active' => $insurance,
                     'shipBinAlone' => $_product->getData('en_own_package'),
@@ -513,7 +513,7 @@ class UPSSmpkgShipping extends AbstractCarrier implements CarrierInterface
                 $method = $this->rateMethodFactory->create();
                 $carrierCode = (isset($carrersTitle[$carrierkey])) ? $carrersTitle[$carrierkey] : $this->_code;
                 $carrierTitle = (isset($carrersArray[$carrierkey])) ?
-                    $carrersArray[$carrierkey] : $this->getConfigData('title');
+                $carrersArray[$carrierkey] : $this->getConfigData('title');
                 $method->setCarrierTitle($carrierCode);
                 $method->setCarrier($carrierTitle);
                 $method->setMethod($carreir['code']);
@@ -530,8 +530,11 @@ class UPSSmpkgShipping extends AbstractCarrier implements CarrierInterface
     public function printQuery()
     {
         $printQuery = 0;
-        parse_str(parse_url($this->httpRequest->getServer('HTTP_REFERER'), PHP_URL_QUERY), $query);
-
+        $query = '';
+        if(!empty($this->httpRequest->getServer('HTTP_REFERER')) && !empty(parse_url($this->httpRequest->getServer('HTTP_REFERER'), PHP_URL_QUERY))){
+            parse_str(parse_url($this->httpRequest->getServer('HTTP_REFERER'), PHP_URL_QUERY), $query);
+        }
+        
         if (!empty($query)) {
             $printQuery = ($query['en_print_query']) ?? 0;
         }

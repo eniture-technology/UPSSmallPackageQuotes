@@ -1,5 +1,11 @@
 <?php
-
+/**
+ * @category   Shipping
+ * @package    Eniture_UPSSmallPackageQuotes
+ * @author     Eniture Technology : <sales@eniture.com>
+ * @website    http://eniture.com
+ * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ */
 
 namespace Eniture\UPSSmallPackageQuotes\Setup;
 
@@ -20,7 +26,8 @@ use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\DB\Ddl\Table;
 
 /**
- * Class InstallData creates pre requisites
+ * Class InstallData
+ * @package Eniture\UPSSmallPackageQuotes\Setup
  */
 class InstallData implements InstallDataInterface
 {
@@ -41,10 +48,6 @@ class InstallData implements InstallDataInterface
      * @var DB Connection
      */
     private $connection;
-    /**
-     * @var Magento Version
-     */
-    private $mageVersion;
 
     /**
      * @var CollectionFactory
@@ -66,10 +69,6 @@ class InstallData implements InstallDataInterface
      */
     private $palnUpgrade;
     /**
-     * @var ProductMetadataInterface
-     */
-    private $productMetadata;
-    /**
      * @var Config
      */
     private $eavConfig;
@@ -85,6 +84,10 @@ class InstallData implements InstallDataInterface
      * @var ConfigInterface
      */
     private $resourceConfig;
+    /**
+     * @var $haveTsAttributes
+     */
+    private $haveTsAttributes = false;
 
 
     /**
@@ -113,7 +116,6 @@ class InstallData implements InstallDataInterface
         PlanUpgrade $planUpgrade
     ) {
         $this->eavSetupFactory      = $eavSetupFactory;
-        $this->productMetadata      = $productMetadata;
         $this->collectionFactory    = $collectionFactory;
         $this->productloader        = $productloader;
         $this->resource             = $resource;
@@ -123,26 +125,25 @@ class InstallData implements InstallDataInterface
         $this->resourceConfig       = $resourceConfig;
         $this->palnUpgrade          = $planUpgrade;
     }
-
+       
     /**
      * {@inheritdoc}
      */
     public function install(ModuleDataSetupInterface $setup, ModuleContextInterface $context)
     {
         $this->state->validateAreaCode();
-
+        
         // Check plan info of current module
         $this->palnUpgrade->execute();
-
+        
         $this->connection = $this->resource
         ->getConnection(ResourceConnection::DEFAULT_CONNECTION);
-        $this->mageVersion      = $this->productMetadata->getVersion();
 
         $installer = $setup;
         $installer->startSetup();
         /** @var EavSetup $eavSetup */
         $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
-
+        
         $this->getTableNames();
         $this->attrNames();
         $this->renameOldAttributes();
@@ -167,44 +168,35 @@ class InstallData implements InstallDataInterface
             'EnitureModules'    => $this->resource->getTableName('EnitureModules'),
         ];
     }
-
+    
     /**
      * Set Attribute names globally
      */
     private function attrNames()
     {
-        $dimAttr = [
-            'length'            => 'length',
-            'width'             => 'width',
-            'height'            => 'height',
+        $this->attrNames = [
+            'length' => 'length',
+            'width'  => 'width',
+            'height' => 'height'
         ];
-        $dsAttr = [
-            'dropship'          => 'dropship',
-            'dropship_location' => 'dropship_location'
-        ];
-
-        $this->attrNames = ($this->mageVersion >= '2.2.5') ? $dsAttr : array_merge($dsAttr, $dimAttr);
     }
-
+    
     /**
      * Rename old attribute name
      */
     private function renameOldAttributes()
     {
-        if ($this->mageVersion < '2.2.5') {
-            $attributes = $this->attrNames;
-            foreach ($attributes as $key => $attr) {
-                $isExist = $this->eavConfig->getAttribute('catalog_product', 'wwe_'.$attr.'')->getAttributeId();
-                if ($isExist != null) {
-                    $updateSql = "UPDATE ".$this->tableNames['eav_attribute']." "
-                            . "SET attribute_code = 'en_".$attr."', is_required = 0 "
-                            . "WHERE attribute_code = 'wwe_".$attr."'";
-                    $this->connection->query($updateSql);
-                }
+        foreach ($this->attrNames as $key => $attr) {
+            $isExist = $this->eavConfig->getAttribute('catalog_product', 'wwe_'.$attr.'')->getAttributeId();
+            if ($isExist != null) {
+                $updateSql = "UPDATE ".$this->tableNames['eav_attribute']." "
+                        . "SET attribute_code = 'en_".$attr."', is_required = 0 "
+                        . "WHERE attribute_code = 'wwe_".$attr."'";
+                $this->connection->query($updateSql);
             }
         }
     }
-
+    
     /**
      * @param type $installer
      */
@@ -221,33 +213,37 @@ class InstallData implements InstallDataInterface
             ]
         );
     }
-
+    
     /**
      * add custom product attributes required for product settings
      * @param $installer
      */
     private function addUPSSmallAttributes($installer, $eavSetup)
     {
-        $attributes = $this->attrNames;
-        if ($this->mageVersion < '2.2.5') {
-            unset($attributes['dropship'], $attributes['dropship_location']);
-            $count = 65;
-            foreach ($attributes as $key => $attr) {
-                $isExist = $this->eavConfig
-                        ->getAttribute('catalog_product', 'en_'.$attr.'')->getAttributeId();
-                if ($isExist == null) {
-                    $this->getAttributeArray(
-                        $eavSetup,
-                        'en_'.$attr,
-                        \Magento\Framework\DB\Ddl\Table::TYPE_DECIMAL,
-                        ucfirst($attr),
-                        'text',
-                        '',
-                        $count
-                    );
+        $count = 65;
+        foreach ($this->attrNames as $key => $attr) {
+            if($attr == 'length' || $attr == 'width' || $attr == 'height'){
+                $isTsAttExists = $this->eavConfig
+                    ->getAttribute('catalog_product', 'ts_dimensions_' . $attr . '')->getAttributeId();
+                if($isTsAttExists != null){
+                    $this->haveTsAttributes = true;
+                    continue;
                 }
-                $count++;
             }
+            $isExist = $this->eavConfig
+                    ->getAttribute('catalog_product', 'en_'.$attr.'')->getAttributeId();
+            if ($isExist == null) {
+                $this->getAttributeArray(
+                    $eavSetup,
+                    'en_'.$attr,
+                    \Magento\Framework\DB\Ddl\Table::TYPE_DECIMAL,
+                    ucfirst($attr),
+                    'text',
+                    '',
+                    $count
+                );
+            }
+            $count++;
         }
 
         $isendropshipExist = $this->eavConfig->getAttribute('catalog_product', 'en_dropship')->getAttributeId();
@@ -297,7 +293,7 @@ class InstallData implements InstallDataInterface
                 73
             );
         }
-
+        
         $isInsurance = $this->eavConfig->getAttribute('catalog_product', 'en_insurance')->getAttributeId();
 
         if ($isInsurance == null) {
@@ -313,7 +309,7 @@ class InstallData implements InstallDataInterface
         }
         $installer->endSetup();
     }
-
+    
     /**
      * @param type $eavSetup
      * @param type $code
@@ -347,10 +343,10 @@ class InstallData implements InstallDataInterface
                 'default'          => '0'
             ]
         );
-
+        
         return $attrArr;
     }
-
+    
     /**
      * create warehouse db table for module warehouse section
      * @param $installer
@@ -462,7 +458,7 @@ class InstallData implements InstallDataInterface
     {
         $lengthChange = $widthChange = $heightChange = false;
 
-        if ($this->mageVersion > '2.2.4') {
+        if ($this->haveTsAttributes) {
             $productCollection = $this->collectionFactory->create()->addAttributeToSelect('*');
             foreach ($productCollection as $_product) {
                 $product = $this->productloader->create()->load($_product->getEntityId());

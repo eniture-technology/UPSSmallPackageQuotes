@@ -108,6 +108,6 @@ class OrderDetailWidget extends Template implements TabInterface
      */
     public function getTabUrl()
     {
-        return $this->getUrl('orderdetailwidget/*/OrderDetailWidget', ['_current' => true]);
+        return $this->getUrl('orderdetailwidget_upssmall/*/OrderDetailWidget', ['_current' => true]);
     }
 }

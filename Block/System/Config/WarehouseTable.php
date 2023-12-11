@@ -83,7 +83,8 @@ class WarehouseTable extends Field
      */
     public function upsSmPlanNotice()
     {
-        return $this->dataHelper->upsSmallSetPlanNotice();
+        $planRefreshUrl = $this->getPlanRefreshUrl();
+        return $this->dataHelper->upsSmallSetPlanNotice($planRefreshUrl);
     }
 
     /**
@@ -92,5 +93,13 @@ class WarehouseTable extends Field
     public function addWhRestriction()
     {
         return $this->dataHelper->whPlanRestriction();
+    }
+
+    /**
+     * @return url
+     */
+    public function getPlanRefreshUrl()
+    {
+        return $this->getbaseUrl().'upssmallpackagequotes/Test/PlanRefresh/';
     }
 }

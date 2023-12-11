@@ -23,22 +23,64 @@
             <group id="first" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Connection Settings</label>
 
+                <field id="apiEndpoint" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Which API will you connect to?</label>
+                    <validate>required-entry</validate>
+                    <source_model>Eniture\UPSSmallPackageQuotes\Model\Source\ApiEndpoint</source_model>
+                </field>
                 <field id="accountNumber" translate="label" type="text" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Account Number</label>
                     <validate>required-entry</validate>
                 </field>
+                <!-- New API -->
+                <field id="clientId" translate="label" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Client ID</label>
+                    <validate>required-entry</validate>
+                    <depends>
+                        <field id="apiEndpoint">new</field>
+                    </depends>
+                </field>
+                <field id="clientSecret" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Client Secret</label>
+                    <validate>required-entry</validate>
+                    <depends>
+                        <field id="apiEndpoint">new</field>
+                    </depends>
+                </field>
+                <field id="usernameNewAPI" translate="label" type="text" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Username</label>
+                    <depends>
+                        <field id="apiEndpoint">new</field>
+                    </depends>
+                </field>
+                <field id="passwordNewAPI" translate="label" type="text" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Password</label>
+                    <depends>
+                        <field id="apiEndpoint">new</field>
+                    </depends>
+                </field>
 
+                <!-- Legacy API -->
                 <field id="username" translate="label" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Username</label>
                     <validate>required-entry</validate>
+                    <depends>
+                        <field id="apiEndpoint">legacy</field>
+                    </depends>
                 </field>
                 <field id="password" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Password</label>
                     <validate>required-entry</validate>
+                    <depends>
+                        <field id="apiEndpoint">legacy</field>
+                    </depends>
                 </field>
                 <field id="upsLicenseKey" translate="label" type="text" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>API Access Key</label>
                     <validate>required-entry</validate>
+                    <depends>
+                        <field id="apiEndpoint">legacy</field>
+                    </depends>
                 </field>
 
                 <field id="licnsKey" translate="label" type="text" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="1">

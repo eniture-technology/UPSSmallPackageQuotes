@@ -162,11 +162,20 @@ class ResidentialAddressDetection extends Field
      */
     public function upsSmallPlanNotice()
     {
-        return $this->dataHelper->upsSmallSetPlanNotice();
+        $planRefreshUrl = $this->getPlanRefreshUrl();
+        return $this->dataHelper->upsSmallSetPlanNotice($planRefreshUrl);
     }
 
     public function quoteSettingFieldsToRestrict()
     {
         return json_encode($this->dataHelper->quoteSettingFieldsToRestrict());
+    }
+
+    /**
+     * @return url
+     */
+    public function getPlanRefreshUrl()
+    {
+        return $this->getbaseUrl().'upssmallpackagequotes/Test/PlanRefresh/';
     }
 }

@@ -96,6 +96,38 @@ class Data extends AbstractHelper
     public $objectManager;
 
     public $gndHzrdousFee;
+    /**
+     * @var String
+     */
+    public $UPSDomesticServices;
+    /**
+     * @var String
+     */
+    public $UPSInternationalServices;
+    /**
+     * @var String
+     */
+    public $UPSSurePost;
+    /**
+     * @var String
+     */
+    public $UPSGndwithFreight;
+    /**
+     * @var String
+     */
+    public $residentialDlvry;
+    /**
+     * @var String
+     */
+    public $onlyGndService;
+    /**
+     * @var String
+     */
+    public $airHzrdousFee;
+    /**
+     * @var String
+     */
+    public $upsRates;
 
     /**
      * Data constructor.
@@ -282,20 +314,15 @@ class Data extends AbstractHelper
      */
     public function quoteSettingsData($scopeConfig)
     {
-        $fields = [
-            'UPSDomesticServices'       => 'UPSDomesticServices',
-            'UPSInternationalServices'  => 'UPSInternationalServices',
-            'UPSSurePost'               => 'UPSSurePost',
-            'UPSGndwithFreight'         => 'UPSGndwithFreight',
-            'residentialDlvry'          => 'residentialDlvry',
-            'onlyGndService'            => 'onlyGndService',
-            'gndHzrdousFee'             => 'gndHzrdousFee',
-            'airHzrdousFee'             => 'airHzrdousFee',
-            'upsRates'                  => 'upsRates',
-        ];
-        foreach ($fields as $key => $field) {
-            $this->$key = $this->adminConfigData($field, $scopeConfig);
-        }
+        $this->UPSDomesticServices = $this->adminConfigData('UPSDomesticServices', $scopeConfig);
+        $this->UPSInternationalServices = $this->adminConfigData('UPSInternationalServices', $scopeConfig);
+        $this->UPSSurePost = $this->adminConfigData('UPSSurePost', $scopeConfig);
+        $this->UPSGndwithFreight = $this->adminConfigData('UPSGndwithFreight', $scopeConfig);
+        $this->residentialDlvry = $this->adminConfigData('residentialDlvry', $scopeConfig);
+        $this->onlyGndService = $this->adminConfigData('onlyGndService', $scopeConfig);
+        $this->gndHzrdousFee = $this->adminConfigData('gndHzrdousFee', $scopeConfig);
+        $this->airHzrdousFee = $this->adminConfigData('airHzrdousFee', $scopeConfig);
+        $this->upsRates = $this->adminConfigData('upsRates', $scopeConfig);
 
         // Get origin zipcode array for onerate settings
         $this->getOriginZipCodeArr();
@@ -388,7 +415,11 @@ class Data extends AbstractHelper
         $fieldString = http_build_query($postData);
         $this->curl->post($url, $fieldString);
         $output = $this->curl->getBody();
-        $result = json_decode($output, $isAssocArray);
+        if(!empty($output) && is_string($output)){
+            $result = json_decode($output, $isAssocArray);
+        }else{
+            $result = ($isAssocArray) ? [] : '';
+        }
         return $result;
     }
 
@@ -398,7 +429,7 @@ class Data extends AbstractHelper
      */
     public function getZipcode($key)
     {
-        $key = explode("_", $key);
+        $key = empty($key) ? [] : explode("_", $key);
         return (isset($key[0])) ? $key[0] : "";
     }
 
@@ -624,7 +655,7 @@ class Data extends AbstractHelper
 
         $plan = $this->planName();
         $ServiceSummary = $response->tnt->TransitResponse->ServiceSummary;
-        if ($plan['planNumber'] == 3 && strlen($daysToRestrict) > 0 && strlen($transitDayType) > 0) {
+        if ($plan['planNumber'] == 3 && !empty($daysToRestrict) && strlen($daysToRestrict) > 0 && !empty($transitDayType) && strlen($transitDayType) > 0) {
             foreach ($ServiceSummary as $key => $service) {
                 $serviceCode = $service->Service->Code;
                 if ($serviceCode === 'GND') { // To check if it is UPS Ground
@@ -1039,14 +1070,14 @@ class Data extends AbstractHelper
     /**
      * @return string
      */
-    public function upsSmallSetPlanNotice()
+    public function upsSmallSetPlanNotice($planRefreshUrl = '')
     {
         $planMsg = '';
         $planPackage = $this->planName();
         if ($planPackage['storeType'] === null) {
             $planPackage = [];
         }
-        $planMsg = $this->diplayPlanMessages($planPackage);
+        $planMsg = $this->diplayPlanMessages($planPackage, $planRefreshUrl);
         return $planMsg;
     }
 
@@ -1054,14 +1085,22 @@ class Data extends AbstractHelper
      * @param type $planPackage
      * @return type
      */
-    public function diplayPlanMessages($planPackage)
+    public function diplayPlanMessages($planPackage, $planRefreshUrl = '')
     {
-        $planMsg = __('Eniture - UPS Small Package Quotes plan subscription is inactive. Please activate plan subscription from <a target="_blank" href="'.EnConstants::EN_URL.'">here</a>.');
+        $planRefreshLink = '';
+        if (!empty($planRefreshUrl)) {
+            $planRefreshLink = ' <a href="javascript:void(0)" id="plan-refresh-link" planRefAjaxUrl = '.$planRefreshUrl.' onclick="upsSmpkgPlanRefresh(this)" >Click here</a> to refresh the plan (please sign-in again after this action).';
+            $planMsg = __('The subscription to the UPS Small Package Quotes module is inactive. If you believe the subscription should be active and you recently changed plans (e.g. upgraded your plan), your firewall may be blocking confirmation from our licensing system. To resolve the situation, <a href="javascript:void(0)" id="plan-refresh-link" planRefAjaxUrl = '.$planRefreshUrl.' onclick="upsSmpkgPlanRefresh(this)" >click this link</a> and then sign in again. If this does not resolve the issue, log in to eniture.com and verify the license status.');
+        }else{
+            $planMsg = __('The subscription to the UPS Small Package Quotes module is inactive. Please log into eniture.com and update your license.');
+        }
+
         if (isset($planPackage) && !empty($planPackage)) {
             if ($planPackage['planNumber'] !== null && $planPackage['planNumber'] != '-1') {
-                $planMsg = __('Eniture - UPS Small Package Quotes is currently on the ' . $planPackage['planName'] . '. Your plan will expire within ' . $planPackage['expireDays'] . ' days and plan renews on ' . $planPackage['expiryDate'] . '.');
+                $planMsg = __('The UPS Small Package Quotes from Eniture Technology is currently on the '.$planPackage['planName'].' and will renew on '.$planPackage['expiryDate'].'. If this does not reflect changes made to the subscription plan'.$planRefreshLink.'.');
             }
         }
+
         return $planMsg;
     }
     /**
@@ -1212,8 +1251,17 @@ class Data extends AbstractHelper
             ->addFilter('warehouse_id', ['eq' => $data['locationId']]);
 
         $whCollection = $this->purifyCollectionData($whCollection);
-        $instore = json_decode($whCollection[0]['in_store'], true);
-        $locDel  = json_decode($whCollection[0]['local_delivery'], true);
+        if(!empty($whCollection[0]['in_store']) && is_string($whCollection[0]['in_store'])){
+            $instore = json_decode($whCollection[0]['in_store'], true);
+        }else{
+            $instore = [];
+        }
+        
+        if(!empty($whCollection[0]['local_delivery']) && is_string($whCollection[0]['local_delivery'])){
+            $locDel = json_decode($whCollection[0]['local_delivery'], true);
+        }else{
+            $locDel = [];
+        }
 
         if ($instore) {
             $inStoreTitle = $instore['checkout_desc_store_pickup'];

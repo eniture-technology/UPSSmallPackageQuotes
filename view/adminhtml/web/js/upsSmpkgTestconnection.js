@@ -17,13 +17,24 @@ require(['jquery', 'domReady!'], function ($) {
 function upsSmpkgTestConnectionAjaxCall($, ajaxURL)
 {
     let common = '#upsconnsettings_first_';
+    let apiEndpoint = $(common+'apiEndpoint').val();
     let credentials = {
-        userName: $(common + 'username').val(),
-        password: $(common + 'password').val(),
-        upsLcnsKey: $(common + 'upsLicenseKey').val(),
         accountNumber: $(common + 'accountNumber').val(),
-        pluginLicenceKey: $(common + 'licnsKey').val()
+        pluginLicenceKey : $(common + 'licnsKey').val(),
+        apiEndpoint      : apiEndpoint
     };
+
+    if(apiEndpoint == 'new'){
+        credentials.clientId            = $(common+'clientId').val();
+        credentials.clientSecret        = $(common+'clientSecret').val();
+        credentials.userName            = $(common+'usernameNewAPI').val();
+        credentials.password            = $(common+'passwordNewAPI').val();
+    }else{
+        credentials.userName            = $(common+'username').val();
+        credentials.password            = $(common+'password').val();
+        credentials.upsLcnsKey          = $(common+'upsLicenseKey').val();
+    }
+
     upsSmAjaxRequest(credentials, ajaxURL, upsSmConnectSuccessFunction);
 }
 
@@ -43,3 +54,22 @@ function upsSmConnectSuccessFunction(data)
         upsSmResponseMessage('upsSm-response-box', 'error', errorText);
     }
 }
+
+/**
+ * Plan Refresh ajax call
+ * @param {object} $
+ * @param {string} ajaxURL
+ * @returns {function}
+ */
+function upsSmpkgPlanRefresh(e){
+    let ajaxURL = e.getAttribute('planRefAjaxUrl');
+    let parameters = {};
+    upsSmAjaxRequest(parameters, ajaxURL, upsSmpkgPlanRefreshResponse);
+}
+
+/**
+ * Handle response
+ * @param {object} data
+ * @returns {void}
+ */
+function upsSmpkgPlanRefreshResponse(data){}
