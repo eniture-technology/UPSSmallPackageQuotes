@@ -2,7 +2,7 @@
   "name": "eniture/ups-small-package-quotes",
   "description": "Magento 2 Shipping Rates From UPS Small Package Quotes",
   "type": "magento2-module",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "license": [
     "OSL-3.0",
     "AFL-3.0"

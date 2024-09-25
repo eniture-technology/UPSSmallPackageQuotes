@@ -205,7 +205,7 @@ class UPSSmpkgShipping extends AbstractCarrier implements CarrierInterface
         }
 
         if (empty($request->getDestPostcode()) || empty($request->getDestCountryId())
-            || empty($request->getDestCity()) || empty($request->getDestRegionId())) {
+            || empty($request->getDestCity())) {
             return false;
         }
         // set base currency

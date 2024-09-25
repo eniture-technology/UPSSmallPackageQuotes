@@ -84,7 +84,7 @@ class UPSSmpkgGenerateRequestData
             'serverName'    => $this->request->getServer('SERVER_NAME'),
             'carrierMode'   => 'pro',
             'quotestType'   => 'small',
-            'version'       => '1.1.0',
+            'version'       => '1.1.1',
             'api'           => $this->getApiInfoArr($request->getDestCountryId(), $origin),
             'getDistance'   => $getDistance,
         ];
