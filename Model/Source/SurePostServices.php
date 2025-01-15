@@ -20,6 +20,8 @@ class SurePostServices
                 ['value' => '94', 'label' => 'UPS SurePost Bound Printed Matter'],
 
                 ['value' => '95', 'label' => 'UPS SurePost Media Mail'],
+                
+                ['value' => 'GFP', 'label' => 'UPS Ground with Freight Pricing'],
             ];
     }
 }

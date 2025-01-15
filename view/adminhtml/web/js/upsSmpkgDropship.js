@@ -112,13 +112,13 @@ require(
         });
 
         //Add required to Local Delivery Fee if Local Delivery is enabled
-        $(upsSmDsFormId + ' #ds-enable-local-delivery').on('change', function () {
-            if ($(this).is(':checked')) {
-                $(upsSmDsFormId + ' #ds-ld-fee').addClass('required');
-            } else {
-                $(upsSmDsFormId + ' #ds-ld-fee').removeClass('required');
-            }
-        });
+        // $(upsSmDsFormId + ' #ds-enable-local-delivery').on('change', function () {
+        //     if ($(this).is(':checked')) {
+        //         $(upsSmDsFormId + ' #ds-ld-fee').addClass('required');
+        //     } else {
+        //         $(upsSmDsFormId + ' #ds-ld-fee').removeClass('required');
+        //     }
+        // });
 
         //Get data of Zip Code
         $(upsSmDsFormId + ' #upsSm-ds-zip').on('change', function () {
@@ -254,6 +254,7 @@ function upsSmDropshipEditResSettings(data)
         jQuery(id + ' #ds-city').val(data[0].city);
         jQuery(id + ' #ds-state').val(data[0].state);
         jQuery(id + ' #ds-country').val(data[0].country);
+        jQuery(id + ' #ds-origin-markup').val(data[0].markup);
 
         if (upsSmAdvancePlan) {
             // Load instore pickup and local delivery data

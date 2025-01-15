@@ -165,6 +165,17 @@ if ($plan == 1) {
             </div>
         </div>
 
+        <div class="add-wh-input">
+            <div class="wh-input-label">
+                <?= $block->escapeHtml(__('Handling Fee / Markup')) ?>
+            </div>
+            <div class="wh-input">
+                <input type="text" class="validate-number" title=<?= $block->escapeHtml(__('Handling Fee / Markup')) ?> maxlength="8"
+                       name="markup"
+                       placeholder="" id="ds-origin-markup">
+            </div>
+        </div>
+
         <!--In store Pickup Section-->
         <h2 class="wh-heading is-heading-left" id="ds-is-heading-left">
             <?= $block->escapeHtml(__('In-store Pick Up')) ?>

@@ -84,7 +84,7 @@ class UPSSmpkgGenerateRequestData
             'serverName'    => $this->request->getServer('SERVER_NAME'),
             'carrierMode'   => 'pro',
             'quotestType'   => 'small',
-            'version'       => '1.1.1',
+            'version'       => '1.1.2',
             'api'           => $this->getApiInfoArr($request->getDestCountryId(), $origin),
             'getDistance'   => $getDistance,
         ];
@@ -318,6 +318,13 @@ class UPSSmpkgGenerateRequestData
             $apiArray['ups_small_pkg_authentication_key'] = $this->getConfigData('upsLicenseKey');
         }
 
+        $apiArray['packagesType'] = empty($this->getConfigData('packagingMethod')) ? 'ship_alone' : $this->getConfigData('packagingMethod');
+        $apiArray['perPackageWeight'] = '70';
+        if($apiArray['packagesType'] == 'ship_as_one_150'){
+            $apiArray['packagesType'] = 'ship_as_one';
+            $apiArray['perPackageWeight'] = '150';
+        }
+
         return  $apiArray;
     }
 
@@ -374,11 +381,7 @@ class UPSSmpkgGenerateRequestData
         }
 
         $servicesArr = array_merge($domesticArr, $international, $surePost);
-
-        if ((int) $this->getConfigData('UPSGndwithFreight')) {
-            $servicesArr['ups_small_pkg_Ground_Freight_Pricing'] = 'yes';
-        }
-
+        $servicesArr['ups_small_pkg_Ground_Freight_Pricing'] = $this->isServiceActive('GFP');
         $servicesArr['ups_small_pkg_aditional_handling'] = 'N';
 
 
@@ -424,7 +427,7 @@ class UPSSmpkgGenerateRequestData
             'UPSDomesticServices',
             'UPSInternationalServices',
             'UPSSurePost',
-            'UPSGndwithFreight'
+            'packagingMethod'
         ];
         if (in_array($fieldId, $secThreeIds)) {
             $sectionId = 'upsQuoteSetting';

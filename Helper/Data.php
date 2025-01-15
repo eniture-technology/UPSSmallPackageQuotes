@@ -55,6 +55,10 @@ class Data extends AbstractHelper
     /**
      * @var
      */
+    public $origins;
+    /**
+     * @var
+     */
     public $residentialDelivery;
     /**
      * @var Curl
@@ -108,10 +112,6 @@ class Data extends AbstractHelper
      * @var String
      */
     public $UPSSurePost;
-    /**
-     * @var String
-     */
-    public $UPSGndwithFreight;
     /**
      * @var String
      */
@@ -238,7 +238,8 @@ class Data extends AbstractHelper
     {
         $defualtConn = ResourceConnection::DEFAULT_CONNECTION;
         $whTableName = $this->resource->getTableName('warehouse');
-        return $this->resource->getConnection($defualtConn)->update("$whTableName", $data, "$whereClause");
+        $this->resource->getConnection($defualtConn)->update("$whTableName", $data, "$whereClause");
+        return 1;
     }
 
     /**
@@ -286,6 +287,7 @@ class Data extends AbstractHelper
             'country'    => $inputData['country'],
             'location'   => $inputData['location'],
             'nickname'   => $inputData['nickname'] ?? '',
+            'markup'     => $inputData['markup'] ?? 0
         ];
         $pickupDelvryArr = [
             'enable_store_pickup'           => ($inputData['instore-enable'] === 'on') ? 1 : 0,
@@ -301,7 +303,7 @@ class Data extends AbstractHelper
             'miles_local_delivery'          => $inputData['ld-within-miles'],
             'match_postal_local_delivery'   => $inputData['ld-postcode-match'],
             'checkout_desc_local_delivery'  => $inputData['ld-checkout-descp'],
-            'fee_local_delivery'            => $inputData['ld-fee'],
+            'fee_local_delivery'            => empty($inputData['ld-fee']) ? 0 : $inputData['ld-fee'],
             'suppress_other'                => ($inputData['ld-sup-rates'] === 'on')?1:0,
         ];
         $dataArr['local_delivery'] = json_encode($localDelvryArr);
@@ -317,7 +319,6 @@ class Data extends AbstractHelper
         $this->UPSDomesticServices = $this->adminConfigData('UPSDomesticServices', $scopeConfig);
         $this->UPSInternationalServices = $this->adminConfigData('UPSInternationalServices', $scopeConfig);
         $this->UPSSurePost = $this->adminConfigData('UPSSurePost', $scopeConfig);
-        $this->UPSGndwithFreight = $this->adminConfigData('UPSGndwithFreight', $scopeConfig);
         $this->residentialDlvry = $this->adminConfigData('residentialDlvry', $scopeConfig);
         $this->onlyGndService = $this->adminConfigData('onlyGndService', $scopeConfig);
         $this->gndHzrdousFee = $this->adminConfigData('gndHzrdousFee', $scopeConfig);
@@ -339,6 +340,9 @@ class Data extends AbstractHelper
 
         foreach ($originArr as $key => $origin) {
             $this->originZip[$key] = $origin['senderZip'];
+            if(!empty($origin['senderZip'])){
+                $this->origins[$origin['senderZip']] = $origin;
+            }
         }
     }
 
@@ -355,7 +359,7 @@ class Data extends AbstractHelper
             $check_characters = (in_array($key, $dataArray)) ? preg_match($preg, $tag) : '';
 
             if ($check_characters != 1) {
-                if ($key === 'city' || $key === 'nickname' || $key === 'in_store' || $key === 'local_delivery') {
+                if ($key === 'city' || $key === 'nickname' || $key === 'in_store' || $key === 'local_delivery' || $key == 'markup') {
                     $data[$key] = $tag;
                 } else {
                     $data[$key] = preg_replace('/\s+/', '', $tag);
@@ -385,6 +389,7 @@ class Data extends AbstractHelper
         unset($getWarehouse['warehouse_id']);
         unset($getWarehouse['nickname']);
         unset($validateData['nickname']);
+        unset($validateData['markup']);
         foreach ($getWarehouse as $key => $value) {
             if (empty($value) || $value === null) {
                 $newData[$key] = 'empty';
@@ -458,7 +463,7 @@ class Data extends AbstractHelper
             $binPackaging = $this->setBinPackagingData($quote, $key);
 
             $binPackagingArr[] = $binPackaging;
-            $filteredQuotes[$key] = $this->parseUpsSmallOutput($quote, $allConfigServices, $scopeConfig, $binPackaging[$key]);
+            $filteredQuotes[$key] = $this->parseUpsSmallOutput($quote, $allConfigServices, $scopeConfig, $binPackaging[$key], $key);
         }
 
         $this->coreSession->start();
@@ -574,9 +579,9 @@ class Data extends AbstractHelper
      * @param $serviceType
      * @return array
      */
-    public function parseUpsSmallOutput($quote, $allConfigServices, $scopeConfig, $binPackaging)
+    public function parseUpsSmallOutput($quote, $allConfigServices, $scopeConfig, $binPackaging, $shipmentKey)
     {
-        $getFilteredQuotes = $this->filterQuotes($quote, $scopeConfig, $allConfigServices, $binPackaging);
+        $getFilteredQuotes = $this->filterQuotes($quote, $scopeConfig, $allConfigServices, $binPackaging, $shipmentKey);
 
         if (isset($quote->InstorPickupLocalDelivery) && !empty($quote->InstorPickupLocalDelivery)) {
             $getFilteredQuotes = $this->instoreLocalDeliveryQuotes(
@@ -595,7 +600,7 @@ class Data extends AbstractHelper
      * @param type $quote
      * @return type
      */
-    public function filterQuotes($quotes, $scopeConfig, $allConfigServices, $binPackaging)
+    public function filterQuotes($quotes, $scopeConfig, $allConfigServices, $binPackaging, $shipmentKey)
     {
         $filteredArr = [];
         if (!isset($quotes->q)) {
@@ -608,8 +613,10 @@ class Data extends AbstractHelper
         foreach ($quotes->q as $servkey => $availableServ) {
             if (isset($availableServ->serviceType) && in_array($availableServ->serviceType, $allConfigServices)) {
                 $totalAmount = $this->getQuoteAmount($availableServ, 'upsServices', $binPackaging);
+                $totalAmount = $this->addProductLevelMarkup($totalAmount, $shipmentKey);
+                $totalAmount = $this->addOriginLevelMarkup($totalAmount, $shipmentKey);
                 $addedHandling = $this->calculateHandlingFee($totalAmount, $scopeConfig);
-                $addedHazardous = $this->calculateHazardousFee($availableServ->serviceType, $addedHandling);
+                $addedHazardous = $this->calculateHazardousFee($availableServ->serviceType, $addedHandling, $shipmentKey, $binPackaging);
                 $serviceTitle = $this->getServiceTitle($availableServ->serviceType, $quotes);
                 $autoResTitle = $this->getAutoResidentialTitle($isRAD);
                 if ((isset($serviceTitle) && !empty($serviceTitle)) && $addedHazardous > 0) {
@@ -714,23 +721,23 @@ class Data extends AbstractHelper
      * @param $addedHandling
      * @return int
      */
-    public function calculateHazardousFee($serviceType, $addedHandling)
+    public function calculateHazardousFee($serviceType, $addedHandling, $shipmentKey, $binPackaging = [])
     {
-        $hazourdous = $this->checkHazardousShipment();
-        if (!empty($hazourdous)) {
+        $hazourdous = $this->checkHazardousPerShipment($shipmentKey, $binPackaging);
+        if ($hazourdous['isHazmat']) {
             $ground = ($serviceType == '03') ? true : false;
             $addedHazardous = 0;
             if ($this->onlyGndService == '1') {
                 if ($ground) {
-                    $addedHazardous = $this->gndHzrdousFee + $addedHandling;
+                    $addedHazardous = ($this->gndHzrdousFee * $hazourdous['hazmatQty']) + $addedHandling;
                 } elseif (!$ground && $this->airHzrdousFee !== '') {
                     $addedHazardous = 0;
                 }
             } else {
                 if ($ground && $this->gndHzrdousFee !== '') {
-                    $addedHazardous = $this->gndHzrdousFee + $addedHandling;
+                    $addedHazardous = ($this->gndHzrdousFee * $hazourdous['hazmatQty']) + $addedHandling;
                 } elseif (!$ground && $this->airHzrdousFee !== '') {
-                    $addedHazardous = $this->airHzrdousFee + $addedHandling;
+                    $addedHazardous = ($this->airHzrdousFee * $hazourdous['hazmatQty']) + $addedHandling;
                 } else {
                     $addedHazardous = $addedHandling;
                 }
@@ -757,6 +764,49 @@ class Data extends AbstractHelper
                 }
             }
         }
+        return $hazourdous;
+    }
+
+    public function checkHazardousPerShipment($shipmentKey, $binPackaging = [])
+    {
+        $hazourdous = [];
+        $hazourdous['isHazmat'] = false;
+        $hazourdous['hazmatQty'] = 0;
+        $checkHazordous = $this->registry->registry('hazardousShipment');
+        $hazmatItemsArr = [];
+        $hazourdousFeeOption = $this->getConfigData('upsQuoteSetting/third/hazourdousFeeOptions');
+        if (isset($checkHazordous)) {
+            foreach ($checkHazordous as $key => $data) {
+                if(isset($data[$shipmentKey]) && is_array($data[$shipmentKey])){
+                    if ($data[$shipmentKey]['isHazordous'] == '1') {
+                        $hazourdous['isHazmat'] = true;
+                        $hazmatItemsArr[] = $data[$shipmentKey]['lineItemId'];
+                        if(!empty($hazourdousFeeOption) && $hazourdousFeeOption == 'CombineQuantities'){
+                            $hazourdous['hazmatQty'] += 1;
+                        }else{
+                            $qty = ($data[$shipmentKey]['itemQty']) ? $data[$shipmentKey]['itemQty'] : 0;
+                            $hazourdous['hazmatQty'] += $qty;
+                        }
+                    }
+                }
+            }
+        }
+
+        if($hazourdous['isHazmat'] && !empty($binPackaging) && isset($binPackaging['upsServices']->response->bins_packed) && is_array($binPackaging['upsServices']->response->bins_packed)){
+            $hazourdous['hazmatQty'] = 0;
+            foreach($binPackaging['upsServices']->response->bins_packed as $key => $box){
+                if(isset($box->items) && is_array($box->items)){
+                    foreach($box->items as $kry => $item){
+                        $id = ($item->id) ? $item->id : 0;
+                        if(in_array($id, $hazmatItemsArr)){
+                            $hazourdous['hazmatQty'] += 1;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         return $hazourdous;
     }
 
@@ -846,8 +896,9 @@ class Data extends AbstractHelper
                     if (isset($availableServ->serviceType)
                         && in_array($availableServ->serviceType, $allConfigServices)) {
                         $totalAmount = $this->getQuoteAmount($availableServ, 'upsServices', $binPackaging[$key]);
+                        $totalAmount = $this->addOriginLevelMarkup($totalAmount, $key);
                         $addedHandling = $this->calculateHandlingFee($totalAmount, $scopeConfig);
-                        $addedHazardous = $this->calculateHazardousFee($availableServ->serviceType, $addedHandling);
+                        $addedHazardous = $this->calculateHazardousFee($availableServ->serviceType, $addedHandling, $binPackaging[$key]);
                         $currentService = $this->getServiceTitle($availableServ->serviceType, $quote);
                         if ((isset($currentService) && !empty($currentService)) && $addedHazardous > 0) {
                             $currentArray = ['code' => $availableServ->serviceType . 'UPS',
@@ -886,7 +937,8 @@ class Data extends AbstractHelper
             explode(',', $this->UPSInternationalServices) : [];
         $surePostServices  = isset($this->UPSSurePost) ?
             explode(',', $this->UPSSurePost) : [];
-        $groundFreight = ((int) $this->UPSGndwithFreight) ? ['GFP'] : [];
+
+        $groundFreight = (!empty($surePostServices) && in_array('GFP',$surePostServices)) ? ['GFP'] : [];
 
         return array_merge($domesticServices, $internationalServices, $surePostServices, $groundFreight);
     }
@@ -941,6 +993,47 @@ class Data extends AbstractHelper
             $grandTotal = $totalPrice;
         }
         return $grandTotal;
+    }
+
+    public function addOriginLevelMarkup($totalAmount, $key) {
+        if(isset($this->origins[$key]) && !empty($this->origins[$key]['markup'])){
+            $markup = $this->origins[$key]['markup'];
+        }else{
+            return $totalAmount;
+        }
+
+        if (strpos($markup, '%') !== false) {
+            $percentage = (float) rtrim($markup, '%');
+            $totalAmount += ($totalAmount * $percentage / 100);
+        } else {
+            $totalAmount += (float) $markup;
+        }
+        
+        return $totalAmount;
+    }
+
+    public function addProductLevelMarkup($totalAmount, $key) {
+
+        $setPkgForOrderDetailReg = (null !== $this->registry->registry('setPackageDataForOrderDetail')) ?
+            $this->registry->registry('setPackageDataForOrderDetail') : [];
+        $totalMarkup = 0;
+        if(is_array($setPkgForOrderDetailReg) && isset($setPkgForOrderDetailReg[$key]) && !empty($setPkgForOrderDetailReg[$key]['item'])){
+            foreach($setPkgForOrderDetailReg[$key]['item'] as $key => $value){
+                if(!empty($value['product_markup']) && is_numeric($value['product_markup'])){
+                    if(is_numeric($value['piecesOfLineItem']) && $value['piecesOfLineItem'] > 1){
+                        $productMarkup = (float) ($value['product_markup'] * $value['piecesOfLineItem']);
+                    }else{
+                        $productMarkup = (float) $value['product_markup'];
+                    }
+                }else{
+                    $productMarkup = 0;
+                };
+
+                $totalMarkup += $productMarkup;
+            }
+        }
+        $totalAmount += $totalMarkup;
+        return $totalAmount;
     }
 
     /**
@@ -1278,7 +1371,7 @@ class Data extends AbstractHelper
                 $locDelTitle = "Local delivery";
             }
             $return['locDelTitle'] = $locDelTitle;
-            $return['fee_local_delivery'] = $locDel['fee_local_delivery'];
+            $return['fee_local_delivery'] = empty($locDel['fee_local_delivery']) ? 0 : $locDel['fee_local_delivery'];
             $return['suppress_other'] = $locDel['suppress_other']=='1' ? true : false;
         }
         return $return;

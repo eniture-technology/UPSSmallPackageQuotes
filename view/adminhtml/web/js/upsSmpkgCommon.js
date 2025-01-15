@@ -33,6 +33,13 @@ require(['jquery','jquery/validate', 'domReady!'], function ($) {
 
     $('#upsQuoteSetting_third_hndlngFee').attr('title', 'Handling Fee / Markup');
 
+    $.validator.addMethod('validate-number-percentage', function (value) {
+        if (!value) {
+            return true;
+        }
+        return /^-?\d+(\.\d+)?%?$/.test(value);
+    }, 'Please enter a valid number or percentage.');
+
 });
 
 
@@ -144,7 +151,7 @@ function upsSmSetInspAndLdData(data, eleid) {
     if (localdel != null && localdel != 'null') {
             if (localdel.enable_local_delivery == 1) {
                 jQuery(eleid + 'enable-local-delivery').prop('checked', true);
-                jQuery(eleid + 'ld-fee').addClass('required');
+                // jQuery(eleid + 'ld-fee').addClass('required');
             }
             jQuery(eleid + 'ld-within-miles').val(localdel.miles_local_delivery);
             jQuery(eleid + 'ld-postcode-match').tagsinput('add', localdel.match_postal_local_delivery);

@@ -77,6 +77,8 @@ class UPSSmpkgShipmentPackage
 
         if (!empty($origin)) {
             return $this->multiWarehouse($origin, $receiverZipCode);
+        }else{
+            return [];
         }
     }
 
@@ -125,6 +127,7 @@ class UPSSmpkgShipmentPackage
             $country = ($origin['country'] == "CN") ? "CA" : $origin['country'];
             $location = isset($origin['location']) ? $origin['location'] : 'warehouse';
             $locationId = isset($shortOrigin['id']) ? $shortOrigin['id'] : $shortOrigin['warehouse_id'];
+            $markup = isset($shortOrigin['markup']) ? $shortOrigin['markup'] : 0;
             return [
                     'location' => $location,
                     'locationId' => $locationId,
@@ -133,6 +136,7 @@ class UPSSmpkgShipmentPackage
                     'senderState' => $state,
                     'senderCountryCode' => $country,
                     'InstorPickupLocalDelivery' => $planNumber==3 ? $this->instorePickupLdData($shortOrigin, $receiverZipCode) : '',
+                    'markup' => $markup
                 ];
         }
     }

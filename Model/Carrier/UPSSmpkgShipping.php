@@ -220,6 +220,10 @@ class UPSSmpkgShipping extends AbstractCarrier implements CarrierInterface
 
         $package = $this->getUPSSmpkgShipmentPackage($ItemsList, $receiverZipCode, $request);
 
+        if(empty($package)){
+            return [];
+        } 
+
         //Generate Request Data Class Initialization
         $this->UPSReqData->_init(
             $this->scopeConfig,
@@ -371,8 +375,7 @@ class UPSSmpkgShipping extends AbstractCarrier implements CarrierInterface
             \Magento\Store\Model\ScopeInterface::SCOPE_STORE
         );
 
-
-
+        $orderWidget = $hazordousData = $package = [];
         foreach ($items as $key => $item) {
 
             $_product = $this->productLoader->create()->load($item->getProductId());
@@ -392,7 +395,6 @@ class UPSSmpkgShipping extends AbstractCarrier implements CarrierInterface
                 } else {
                     $freightClass = '';
                 }
-
 
                 //Checking if plan is at least Standard
                 $plan = $this->dataHelper->planName();
@@ -419,7 +421,9 @@ class UPSSmpkgShipping extends AbstractCarrier implements CarrierInterface
 
                 $originAddress = $this->UPSShipPkg->upsSmpkgOriginAddress($_product, $receiverZipCode);
 
-                $hazordousData[][$originAddress['senderZip']] = $this->setHazmatArray($_product, $hazmat);
+                if(empty($originAddress)) continue;
+
+                $hazordousData[][$originAddress['senderZip']] = $this->setHazmatArray($_product, $hazmat, $productQty);
 
                 $package['origin'][$_product->getId()] = $originAddress;
 
@@ -449,15 +453,23 @@ class UPSSmpkgShipping extends AbstractCarrier implements CarrierInterface
                     'product_insurance_active' => $insurance,
                     'shipBinAlone' => $_product->getData('en_own_package'),
                     'vertical_rotation' => $_product->getData('en_vertical_rotation'),
+                    'product_markup' => $_product->getData('en_product_markup')
                 ];
+
+                if($hazmat == 'Y'){
+                    $lineItems['shipItemAlone'] = '1';
+                }
 
                 $package['items'][$_product->getId()] = array_merge($lineItems);
                 $orderWidget[$originAddress['senderZip']]['item'][] = $package['items'][$_product->getId()];
             }
         }
+
+        $uniqueOrigins = [];
         foreach ($orderWidget as $data) {
             $uniqueOrigins [] = $data['origin'];
         }
+
         $this->setDataInRegistry($uniqueOrigins, $hazordousData, $orderWidget);
 
         return $package;
@@ -468,11 +480,12 @@ class UPSSmpkgShipping extends AbstractCarrier implements CarrierInterface
      * @param string $hazmat
      * @return array
      */
-    public function setHazmatArray($_product, $hazmat)
+    public function setHazmatArray($_product, $hazmat, $qty = 1)
     {
         return [
             'lineItemId' => $_product->getId(),
             'isHazordous' => $hazmat == 'Y' ? '1' : '0',
+            'itemQty' => $qty
         ];
     }
 

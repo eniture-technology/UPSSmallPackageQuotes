@@ -3,4 +3,7 @@
         <preference for="Magento\Framework\App\State" type="Eniture\UPSSmallPackageQuotes\App\State" />
         <preference for="Magento\Checkout\Block\Cart\LayoutProcessor" type="Eniture\UPSSmallPackageQuotes\Model\Checkout\Block\Cart\Shipping" />
         <preference for="Magento\Catalog\Controller\Adminhtml\Product\Edit" type="Eniture\UPSSmallPackageQuotes\Controller\Adminhtml\Product\Edit" />
+        <type name="Magento\Catalog\Ui\DataProvider\CatalogEavValidationRules">
+                <plugin name="validation_for_product_dimesion" type="Eniture\UPSSmallPackageQuotes\Model\Plugin\Product\ValidationRules"/>
+        </type>
 </config>

@@ -240,7 +240,8 @@ class InstallData implements InstallDataInterface
                     ucfirst($attr),
                     'text',
                     '',
-                    $count
+                    $count,
+                    'validate-number validate-greater-than-zero'
                 );
             }
             $count++;
@@ -307,6 +308,22 @@ class InstallData implements InstallDataInterface
                 74
             );
         }
+
+        $isMarkupExist = $this->eavConfig
+                    ->getAttribute('catalog_product', 'en_product_markup')->getAttributeId();
+        if ($isMarkupExist == null) {
+            $this->getAttributeArray(
+                $eavSetup,
+                'en_product_markup',
+                \Magento\Framework\DB\Ddl\Table::TYPE_DECIMAL,
+                'Markup',
+                'text',
+                '',
+                75,
+                'validate-number maximum-length-15'
+            );
+        }
+
         $installer->endSetup();
     }
     
@@ -320,7 +337,7 @@ class InstallData implements InstallDataInterface
      * @param type $order
      * @return type
      */
-    private function getAttributeArray($eavSetup, $code, $type, $label, $input, $source, $order)
+    private function getAttributeArray($eavSetup, $code, $type, $label, $input, $source, $order, $frontend_class = '')
     {
         $attrArr = $eavSetup->addAttribute(
             \Magento\Catalog\Model\Product::ENTITY,
@@ -329,7 +346,7 @@ class InstallData implements InstallDataInterface
                 'group'            => 'Product Details',
                 'type'             => $type,
                 'backend'          => '',
-                'frontend'         => '',
+                'frontend_class'   => $frontend_class,
                 'label'            => $label,
                 'input'            => $input,
                 'class'            => '',
@@ -395,7 +412,15 @@ class InstallData implements InstallDataInterface
                     512,
                     [],
                     'local delivery'
-                );
+                )
+                ->addColumn(
+                    'markup',
+                    Table::TYPE_TEXT,
+                    10,
+                    [],
+                    'Markup'
+                )
+                ;
             $installer->getConnection()->createTable($table);
         }
         $installer->endSetup();
@@ -564,6 +589,19 @@ class InstallData implements InstallDataInterface
                     'local_delivery' => [
                         'type'      => Table::TYPE_TEXT,
                         'comment'   => 'local delivery'
+                    ]
+
+                ];
+                $connection = $installer->getConnection();
+                foreach ($columns as $name => $definition) {
+                    $connection->addColumn($tableName, $name, $definition);
+                }
+            }
+            if ($installer->getConnection()->tableColumnExists($tableName, 'markup') === false) {
+                $columns = [
+                    'markup' => [
+                        'type'      => Table::TYPE_TEXT,
+                        'comment'   => 'Markup'
                     ]
 
                 ];

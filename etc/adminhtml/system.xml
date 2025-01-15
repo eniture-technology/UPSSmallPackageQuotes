@@ -134,10 +134,11 @@
                     <comment><![CDATA[To have access to UPS contract services, they must be enabled on your account.]]></comment>
                 </field>
 
-                <field id="UPSGndwithFreight" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>UPS Ground with Freight Pricing</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                <field id="packagingMethod" translate="label" type="radios" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Package rating method when Standard Box Sizes isn't in use</label>
+                    <source_model>Eniture\UPSSmallPackageQuotes\Model\Source\PackagingMethod</source_model>
                 </field>
+
                 <field id="residentialDlvry" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Always Quote Residential Delivery</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -174,16 +175,20 @@
                     <validate>validate-number validate-length maximum-length-7 decimalonly </validate>
                     <comment><![CDATA[Enter an amount, e.g 20. or Leave blank to disable.]]></comment>
                 </field>
-                <field id="hndlngFee" translate="label" type="text" sortOrder="14" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="hazourdousFeeOptions" translate="label" type="radios" sortOrder="14" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>How hazardous fee will apply</label>
+                    <source_model>Eniture\UPSSmallPackageQuotes\Model\Source\HazourdousFeeOptions</source_model>
+                </field>
+                <field id="hndlngFee" translate="label" type="text" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Handling Fee / Markup</label>
                     <validate>validate-number validate-length maximum-length-7 ngtvdecimal</validate>
                 </field>
-                <field id="symbolicHndlngFee" translate="label" type="select" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="symbolicHndlngFee" translate="label" type="select" sortOrder="16" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Fee Type</label>
                     <source_model>Eniture\UPSSmallPackageQuotes\Model\Source\HandlingFee</source_model>
                     <comment><![CDATA[Amount excluding Tax. Enter an amount e.g 3.75 or 15 and select the quantifier e.g Flat Rate or Percentage. Leave blank to disable.]]></comment>
                 </field>
-                <field id="upsRates" translate="label" type="radios" sortOrder="16" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="upsRates" translate="label" type="radios" sortOrder="17" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Rate source</label>
                     <source_model>Eniture\UPSSmallPackageQuotes\Model\Source\UpsRates</source_model>
                 </field>

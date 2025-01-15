@@ -209,6 +209,12 @@ label[for="upsconnsettings_first_licnsKey"]:not(.mage-error):after {
 
 #upsQuoteSetting_third_transitDaysRestrictionByBusinessDaysInTransit,
 #upsQuoteSetting_third_transitDaysRestrictionByCalenderDaysInTransit,
+#upsQuoteSetting_third_hazourdousFeeOptionsShipAsOwnPackage,
+#upsQuoteSetting_third_hazourdousFeeOptionsCombineQuantities,
+#upsQuoteSetting_third_packagingMethodship_alone,
+#upsQuoteSetting_third_packagingMethodship_combine_and_alone,
+#upsQuoteSetting_third_packagingMethodship_as_one,
+#upsQuoteSetting_third_packagingMethodship_as_one_150,
 #upsQuoteSetting_third_upsRatespublish,
 #upsQuoteSetting_third_upsRatesnegotiate {
     margin: 0px -8px 0px !important;
@@ -385,6 +391,7 @@ label[for='Eniture-Menu-Option-section-three-AutoDetectResidentialAddress'] {
 
 /*Fields that are previously with no label*/
 label[for="upsQuoteSetting_third_transitDaysRestrictionBy"],
+label[for="upsQuoteSetting_third_hazourdousFeeOptions"],
 label[for="upsQuoteSetting_third_symbolicHndlngFee"] {
     display: none;
 }

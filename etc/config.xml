@@ -8,6 +8,8 @@
                 <UPSInternationalServices>11,08,65,07,54</UPSInternationalServices>
                 <upsRates>publish</upsRates>
                 <transitDaysRestrictionBy>TransitTimeInDays</transitDaysRestrictionBy>
+                <hazourdousFeeOptions>ShipAsOwnPackage</hazourdousFeeOptions>
+                <packagingMethod>ship_alone</packagingMethod>
             </third>
         </upsQuoteSetting>
         <carriers>
